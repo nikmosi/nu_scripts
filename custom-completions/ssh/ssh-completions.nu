@@ -61,9 +61,9 @@ module ssh-completion-utils {
     export def process []: string -> record<hosts: list<record<name: string, addr: string>>, includes: list<string>> {
         let lines = $in | lines
         # Get 'Include' lines
-        let include_lines = $lines | find -n -ir '^Include\s' | str trim | each { $in | split row -n 2 -r '\s+' | get 1 | str trim -c '"'}
+        let include_lines = $lines | find -ir '^Include\s' | str trim | each { $in | split row -n 2 -r '\s+' | get 1 | str trim -c '"'}
         # Find "Host" blocks
-        let marks = $lines | enumerate | find -n -ir '^Host\s'
+        let marks = $lines | enumerate | find -ir '^Host\s'
         let mark_indices = $marks | get index | append ($lines | length)
         let hosts = $mark_indices | window 2 | each {|w| $lines | slice $w.0..<($w.1) }
         {
@@ -88,7 +88,7 @@ def "nu-complete ssh-host" [] {
         mut r = $file | open --raw | process
         $r.includes = $r.includes | each {|f| $folder | path join $f }
         $r
-    } | reduce {|it| merge deep $it --strategy=append }
+    } | reduce {|it| merge $it }
 
     let $includes: list<string> = $first_result.includes | each {|f|
         if '*' in $f {
@@ -100,7 +100,7 @@ def "nu-complete ssh-host" [] {
 
     # Process include files
     let included_hosts = (if ($includes | is-empty) { [] } else {
-        let second_result = $includes | par-each {|p| $p | open --raw | process } | reduce {|it| merge deep $it --strategy=append }
+        let second_result = $includes | par-each {|p| $p | open --raw | process } | reduce {|it| merge $it }
         $second_result.hosts
     })
 
