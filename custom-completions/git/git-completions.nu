@@ -230,7 +230,7 @@ const short_status_descriptions = {
 
 def "nu-complete git files" [] {
   let relevant_statuses = ["?",".M", "MM", "MD", ".D", "UU"]
-  ^git status -uall --porcelain=2
+  let completions = ( ^git status -uall --porcelain=2
   | lines
   | each { |$it|
     if $it starts-with "1 " {
@@ -247,7 +247,16 @@ def "nu-complete git files" [] {
   }
   | flatten
   | where $it.short_status in $relevant_statuses
-  | insert "description" { |e| $short_status_descriptions | get $e.short_status}
+  | insert "description" { |e| $short_status_descriptions | get $e.short_status} )
+  return {
+    options: {
+      case_sensitive: false,
+      positional: false,
+      sort: false,
+      algorithm: "fuzzy"    # prefix or fuzzy
+    },
+    completions: $completions
+  }
 }
 
 def "nu-complete git built-in-refs" [] {
