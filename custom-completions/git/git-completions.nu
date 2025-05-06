@@ -282,6 +282,9 @@ def "nu-complete git files-or-refs" [] {
 
 def "nu-complete git subcommands" [] {
   ^git help -a | lines | where $it starts-with "   " | parse -r '\s*(?P<value>[^ ]+) \s*(?P<description>\w.*)'
+carapace git nushell ...['git' '']
+    | from json
+    | if ($in | default [] | where value =~ '^-.*ERR$' | is-empty) { $in } else { null }
 }
 
 def "nu-complete git add" [] {
